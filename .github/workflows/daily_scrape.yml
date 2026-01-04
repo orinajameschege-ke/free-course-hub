@@ -15,6 +15,7 @@ jobs:
           python-version: '3.9'
       - name: Install dependencies
         run: pip install requests supabase
+httpx
       - name: Run scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
