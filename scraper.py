@@ -1,10 +1,9 @@
 
 import os
 import requests
-from bs4 import BeautifulSoup
 from supabase import create_client
 
-# 1. Configuration: Uses your GitHub Secrets
+# 1. Setup - uses your existing GitHub Secrets
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -13,7 +12,6 @@ supabase = create_client(url, key)
 
 def scrape_youtube():
     print("--- Starting YouTube Scrape ---")
-    # Searches YouTube for the latest free AI courses
     search_url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=Free+AI+Course+2026&type=video&key={youtube_api_key}"
     
     try:
@@ -26,7 +24,6 @@ def scrape_youtube():
                 "category": "AI Tools",
                 "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
             }
-            # upsert avoids duplicates by checking the unique URL
             supabase.table("courses").upsert(course_data, on_conflict="url").execute()
             print(f"Added YouTube: {item['snippet']['title']}")
     except Exception as e:
@@ -34,12 +31,13 @@ def scrape_youtube():
 
 def scrape_mit_university():
     print("--- Starting MIT University Scrape ---")
-    # Using the direct data API to avoid being blocked by MIT's firewall
+    # Using the direct search API for better reliability
     mit_api_url = "https://ocw.mit.edu/search/api/v1/courses/?q=artificial+intelligence"
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Referer": "https://ocw.mit.edu/"
     }
     
     try:
@@ -47,7 +45,8 @@ def scrape_mit_university():
         
         if response.status_code == 200:
             data = response.json()
-            courses = data.get('results', [])[:5] # Pull the top 5 results
+            # MIT results are usually nested in a 'results' key
+            courses = data.get('results', [])[:5]
             
             for course in courses:
                 title = course.get('title')
@@ -70,6 +69,5 @@ def scrape_mit_university():
         print(f"MIT Scrape Error: {e}")
 
 if __name__ == "__main__":
-    # Runs both scrapers in sequence
     scrape_youtube()
     scrape_mit_university()
