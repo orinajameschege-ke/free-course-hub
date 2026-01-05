@@ -3,7 +3,7 @@ import os
 import requests
 from supabase import create_client
 
-# 1. Configuration
+# Configuration
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -28,38 +28,47 @@ def scrape_youtube():
     except Exception as e:
         print(f"YouTube Error: {e}")
 
-def scrape_mit_via_proxy():
-    print("--- Starting MIT Proxy Scrape ---")
-    # Instead of hitting MIT directly, we use a public search proxy
-    # This finds MIT AI courses that are indexed by search engines
-    search_query = "site:ocw.mit.edu 'Artificial Intelligence' free course"
-    proxy_url = f"https://api.duckduckgo.com/?q={search_query}&format=json"
-    
-    headers = {"User-Agent": "Mozilla/5.0"}
+def scrape_harvard_and_mit():
+    print("--- Starting University Scrape ---")
+    # We use a curated list of top Ivy League AI courses to ensure 100% reliability
+    university_courses = [
+        {
+            "title": "CS50's Introduction to Artificial Intelligence with Python",
+            "url": "https://pll.harvard.edu/course/cs50s-introduction-artificial-intelligence-python",
+            "provider": "Harvard University",
+            "category": "Coding",
+            "thumb": "https://learning.harvard.edu/sites/default/files/styles/course_listing/public/course-images/CS50%20AI.png"
+        },
+        {
+            "title": "Data Science: Machine Learning",
+            "url": "https://pll.harvard.edu/course/data-science-machine-learning",
+            "provider": "Harvard University",
+            "category": "AI Tools",
+            "thumb": "https://learning.harvard.edu/sites/default/files/styles/course_listing/public/course-images/DS_MachineLearning.png"
+        },
+        {
+            "title": "MIT: Introduction to Deep Learning",
+            "url": "https://ocw.mit.edu/courses/6-s191-introduction-to-deep-learning-january-iap-2023/",
+            "provider": "MIT",
+            "category": "Coding",
+            "thumb": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"
+        }
+    ]
 
-    try:
-        response = requests.get(proxy_url, headers=headers, timeout=20)
-        # Even if the proxy returns no results today, we create a 'placeholder' 
-        # for a high-value MIT course to ensure your site has variety
-        mit_courses = [
-            {"title": "Introduction to Deep Learning", "url": "https://ocw.mit.edu/courses/6-s191-introduction-to-deep-learning-january-iap-2023/"},
-            {"title": "Artificial Intelligence", "url": "https://ocw.mit.edu/courses/6-034-artificial-intelligence-fall-2010/"}
-        ]
-
-        for course in mit_courses:
+    for course in university_courses:
+        try:
             course_data = {
                 "title": course["title"],
                 "url": course["url"],
-                "provider": "MIT OpenCourseWare",
-                "category": "Coding",
-                "thumbnail_url": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"
+                "provider": course["provider"],
+                "category": course["category"],
+                "thumbnail_url": course["thumb"]
             }
             supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-            print(f"Added MIT: {course['title']}")
-            
-    except Exception as e:
-        print(f"Proxy Error: {e}")
+            print(f"Added {course['provider']}: {course['title']}")
+        except Exception as e:
+            print(f"Error adding {course['title']}: {e}")
 
 if __name__ == "__main__":
     scrape_youtube()
-    scrape_mit_via_proxy()
+    scrape_harvard_and_mit()
