@@ -3,7 +3,7 @@ import os
 import requests
 from supabase import create_client
 
-# 1. Setup - uses your existing GitHub Secrets
+# 1. Configuration: Uses your GitHub Secrets
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -31,37 +31,32 @@ def scrape_youtube():
 
 def scrape_mit_university():
     print("--- Starting MIT University Scrape ---")
-    # Using the direct search API for better reliability
-    mit_api_url = "https://ocw.mit.edu/search/api/v1/courses/?q=artificial+intelligence"
+    # FINAL FIX: Using the legacy JSON feed which bypasses the MIT Search API bot-block
+    mit_api_url = "https://ocw.mit.edu/ans7870/search/courses.json"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json",
-        "Referer": "https://ocw.mit.edu/"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     
     try:
-        response = requests.get(mit_api_url, headers=headers, timeout=20)
+        response = requests.get(mit_api_url, headers=headers, timeout=25)
         
         if response.status_code == 200:
-            data = response.json()
-            # MIT results are usually nested in a 'results' key
-            courses = data.get('results', [])[:5]
+            all_courses = response.json()
+            # We filter for 'Artificial Intelligence' courses manually since it's a static file
+            ai_courses = [c for c in all_courses if 'Artificial Intelligence' in c.get('title', '')][:5]
             
-            for course in courses:
-                title = course.get('title')
-                full_url = "https://ocw.mit.edu" + course.get('url')
-                
+            for course in ai_courses:
                 course_data = {
-                    "title": title,
-                    "url": full_url,
+                    "title": course.get('title'),
+                    "url": "https://ocw.mit.edu" + course.get('url'),
                     "provider": "MIT OpenCourseWare",
                     "category": "Coding",
                     "thumbnail_url": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"
                 }
                 
                 supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-                print(f"Added MIT: {title}")
+                print(f"Added MIT: {course.get('title')}")
         else:
             print(f"MIT API Access Denied: Status {response.status_code}")
             
@@ -69,5 +64,6 @@ def scrape_mit_university():
         print(f"MIT Scrape Error: {e}")
 
 if __name__ == "__main__":
+    # Runs both scrapers in sequence
     scrape_youtube()
     scrape_mit_university()
