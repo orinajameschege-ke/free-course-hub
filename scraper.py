@@ -1,13 +1,13 @@
-
 import os
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 
-# 1. Configuration - Uses your GitHub Secrets
+# 1. Configuration - Loads all keys from GitHub Secrets
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
+rapidapi_key = os.environ.get("RAPIDAPI_KEY") # Your new secret key
 
 supabase = create_client(url, key)
 
@@ -30,63 +30,51 @@ def scrape_youtube():
         print(f"YouTube Error: {e}")
 
 def scrape_coursera():
-    print("--- Starting Coursera Scrape ---")
-    # Coursera search for free courses
-    coursera_url = "https://www.coursera.org/search?query=free%20ai"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    print("--- Starting Coursera API Fetch ---")
+    # Using RapidAPI for Coursera to avoid web-scraping blocks
+    coursera_url = "https://coursera-course-detail.p.rapidapi.com/courses" 
+    headers = {
+        "x-rapidapi-key": rapidapi_key, # Pulls from your GitHub Secret
+        "x-rapidapi-host": "coursera-course-detail.p.rapidapi.com"
+    }
     
     try:
+        # Example API call structure (update params based on your specific RapidAPI choice)
         response = requests.get(coursera_url, headers=headers, timeout=15)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        # Target Coursera's specific card title class
-        cards = soup.select('.cds-119.cds-CommonCard-title')[:5]
-        
-        for card in cards:
-            title = card.text.strip()
-            parent_link = card.find_parent('a')
-            if parent_link:
+        if response.status_code == 200:
+            print("Successfully connected to Coursera API")
+            # Logic here to parse your specific API results
+    except Exception as e:
+        print(f"Coursera API Error: {e}")
+
+def scrape_udemy_api():
+    print("--- Starting Udemy API Fetch ---")
+    # This API provides paid Udemy courses currently available for free
+    url = "https://paid-udemy-course-for-free.p.rapidapi.com/"
+    headers = {
+        "x-rapidapi-key": rapidapi_key, # Uses the SAME secret key
+        "x-rapidapi-host": "paid-udemy-course-for-free.p.rapidapi.com"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code == 200:
+            courses = response.json().get('course_list', [])[:5]
+            for course in courses:
                 course_data = {
-                    "title": title,
-                    "url": "https://www.coursera.org" + parent_link['href'],
-                    "provider": "Coursera",
-                    "category": "AI Tools",
-                    "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Coursera_logo.png"
+                    "title": course['title'],
+                    "url": "https://www.udemy.com" + course['url'],
+                    "provider": "Udemy",
+                    "category": "Coding",
+                    "thumbnail_url": course.get('image_480x270', 'https://www.udemy.com/static/images/brand/logo-udemy.svg')
                 }
                 supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-                print(f"Added Coursera: {title}")
+                print(f"Added Udemy: {course['title']}")
     except Exception as e:
-        print(f"Coursera Scrape Error: {e}")
-
-def scrape_udemy_free():
-    print("--- Starting Udemy Scrape ---")
-    # Searching for Udemy free AI courses
-    udemy_url = "https://www.udemy.com/courses/search/?q=free+ai&price=price-free&sort=relevance"
-    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
-    
-    try:
-        response = requests.get(udemy_url, headers=headers, timeout=15)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        # Udemy cards often use h3 for titles
-        course_titles = soup.select('h3[data-purpose="course-title-url"]')[:5]
-        
-        for title_el in course_titles:
-            title = title_el.text.strip()
-            link = title_el.find('a')['href']
-            course_data = {
-                "title": title,
-                "url": "https://www.udemy.com" + link,
-                "provider": "Udemy",
-                "category": "Coding",
-                "thumbnail_url": "https://www.udemy.com/static/images/brand/logo-udemy.svg"
-            }
-            supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-            print(f"Added Udemy: {title}")
-    except Exception as e:
-        print(f"Udemy Scrape Error: {e}")
+        print(f"Udemy API Error: {e}")
 
 def scrape_university_seeds():
     print("--- Syncing Ivy League Seeds ---")
-    # Guaranteed high-quality content to build site authority
     seeds = [
         {
             "title": "CS50's Intro to AI with Python",
@@ -97,25 +85,4 @@ def scrape_university_seeds():
         },
         {
             "title": "MIT: Intro to Deep Learning",
-            "url": "https://ocw.mit.edu/courses/6-s191-introduction-to-deep-learning-january-iap-2023/",
-            "provider": "MIT",
-            "category": "Coding",
-            "thumb": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"
-        }
-    ]
-    for course in seeds:
-        data = {
-            "title": course["title"],
-            "url": course["url"],
-            "provider": course["provider"],
-            "category": course["category"],
-            "thumbnail_url": course["thumb"]
-        }
-        supabase.table("courses").upsert(data, on_conflict="url").execute()
-        print(f"Synced Seed: {course['title']}")
-
-if __name__ == "__main__":
-    scrape_youtube()
-    scrape_coursera()
-    scrape_udemy_free()
-    scrape_university_seeds()
+            "url": "
