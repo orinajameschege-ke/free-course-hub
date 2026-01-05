@@ -3,7 +3,7 @@ import os
 import requests
 from supabase import create_client
 
-# Configuration
+# 1. Configuration - Connects to your Supabase project
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -11,6 +11,7 @@ youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
 supabase = create_client(url, key)
 
 def scrape_youtube():
+    """Scrapes latest free AI courses from YouTube API"""
     print("--- Starting YouTube Scrape ---")
     search_url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=Free+AI+Course+2026&type=video&key={youtube_api_key}"
     try:
@@ -23,14 +24,16 @@ def scrape_youtube():
                 "category": "AI Tools",
                 "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
             }
+            # Upsert avoids duplicates by checking for existing URLs
             supabase.table("courses").upsert(course_data, on_conflict="url").execute()
             print(f"Added YouTube: {item['snippet']['title']}")
     except Exception as e:
         print(f"YouTube Error: {e}")
 
 def scrape_harvard_and_mit():
+    """Adds elite university courses via a stable curated list"""
     print("--- Starting University Scrape ---")
-    # We use a curated list of top Ivy League AI courses to ensure 100% reliability
+    # Curated list of world-class AI courses
     university_courses = [
         {
             "title": "CS50's Introduction to Artificial Intelligence with Python",
@@ -64,11 +67,13 @@ def scrape_harvard_and_mit():
                 "category": course["category"],
                 "thumbnail_url": course["thumb"]
             }
+            # Syncs university data to your 'courses' table
             supabase.table("courses").upsert(course_data, on_conflict="url").execute()
             print(f"Added {course['provider']}: {course['title']}")
         except Exception as e:
-            print(f"Error adding {course['title']}: {e}")
+            print(f"Error adding university course: {e}")
 
 if __name__ == "__main__":
+    # Orchestrates both scrapers in one run
     scrape_youtube()
     scrape_harvard_and_mit()
