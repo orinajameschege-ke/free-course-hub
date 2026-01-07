@@ -63,14 +63,15 @@ export default function Home() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative max-w-lg mx-auto">
-          <input
-            type="text"
-            placeholder="Search courses (e.g. 'Python', 'ChatGPT')..."
-            className="w-full px-5 py-3 rounded-xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        // Find your search input and update the classes
+<input
+  type="text"
+  placeholder="Search for free courses..."
+  className="w-full p-4 rounded-xl border border-gray-200 
+             bg-white text-gray-900 placeholder-gray-500 
+             focus:outline-none focus:ring-2 focus:ring-blue-500"
+  // ... your existing onChange logic
+/>
 
         {/* Category Bar */}
         <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar justify-center">
