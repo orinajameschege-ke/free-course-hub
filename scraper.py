@@ -6,84 +6,79 @@ from supabase import create_client
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
-rapidapi_key = os.environ.get("RAPIDAPI_KEY") # New secret key
+rapidapi_key = os.environ.get("RAPIDAPI_KEY")
 
 supabase = create_client(supabase_url, supabase_key)
 
-def scrape_youtube():
-    print("--- Starting YouTube Scrape ---")
-    search_url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=Free+AI+Course+2026&type=video&key={youtube_api_key}"
-    try:
-        response = requests.get(search_url).json()
-        for item in response.get("items", []):
-            course_data = {
-                "title": item["snippet"]["title"],
-                "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}",
-                "provider": "YouTube",
-                "category": "AI Tools",
-                "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
-            }
-            supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-            print(f"Added YouTube: {item['snippet']['title']}")
-    except Exception as e:
-        print(f"YouTube Error: {e}")
+def scrape_youtube_multi_page(max_total=100):
+    print(f"--- Starting YouTube Scrape (Target: {max_total} courses) ---")
+    search_query = "Free full courses"
+    base_url = "https://www.googleapis.com/youtube/v3/search"
+    
+    total_added = 0
+    next_page_token = None
+    
+    # Pagination loop to fetch more than 50 results
+    while total_added < max_total:
+        params = {
+            "part": "snippet",
+            "maxResults": 50, # Max allowed per page
+            "q": search_query,
+            "type": "video",
+            "key": youtube_api_key,
+            "pageToken": next_page_token
+        }
+        
+        try:
+            response = requests.get(base_url, params=params).json()
+            items = response.get("items", [])
+            
+            if not items:
+                break
+                
+            for item in items:
+                title = item["snippet"]["title"]
+                # Dynamic category labeling
+                category = "General Learning"
+                if any(word in title.lower() for word in ["code", "python", "javascript", "web dev"]):
+                    category = "Coding"
+                elif any(word in title.lower() for word in ["ai", "machine learning", "data science"]):
+                    category = "AI Tools"
 
-def scrape_udemy_api():
-    print("--- Fetching Udemy via RapidAPI ---")
-    # This specific endpoint is designed for free course discovery
-    url = "https://paid-udemy-course-for-free.p.rapidapi.com/"
-    headers = {
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "paid-udemy-course-for-free.p.rapidapi.com"
-    }
-    try:
-        response = requests.get(url, headers=headers, params={"page": "1"}, timeout=15)
-        if response.status_code == 200:
-            courses = response.json().get('course_list', [])[:5]
-            for course in courses:
-                data = {
-                    "title": course['title'],
-                    "url": "https://www.udemy.com" + course['url'],
-                    "provider": "Udemy",
-                    "category": "Coding",
-                    "thumbnail_url": course.get('image_480x270')
+                course_data = {
+                    "title": title,
+                    "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}",
+                    "provider": "YouTube",
+                    "category": category,
+                    "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
                 }
-                supabase.table("courses").upsert(data, on_conflict="url").execute()
-                print(f"Added Udemy: {course['title']}")
-    except Exception as e:
-        print(f"Udemy API Error: {e}")
-
-def scrape_coursera_api():
-    print("--- Fetching Coursera via RapidAPI ---")
-    # Using the detail API to bypass web scraping blocks
-    url = "https://coursera-course-detail.p.rapidapi.com/courses" 
-    headers = {
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "coursera-course-detail.p.rapidapi.com"
-    }
-    try:
-        # Example API call; adjust parameters based on your specific subscription
-        response = requests.get(url, headers=headers, timeout=15)
-        if response.status_code == 200:
-            print("Successfully connected to Coursera API")
-            # Coursera data parsing logic goes here
-    except Exception as e:
-        print(f"Coursera API Error: {e}")
+                
+                supabase.table("courses").upsert(course_data, on_conflict="url").execute()
+                total_added += 1
+                
+            # Check if there is another page
+            next_page_token = response.get("nextPageToken")
+            if not next_page_token:
+                break
+                
+            print(f"Fetched {total_added} courses so far...")
+            
+        except Exception as e:
+            print(f"YouTube Pagination Error: {e}")
+            break
+            
+    print(f"Finished! Added {total_added} YouTube courses.")
 
 def scrape_university_seeds():
     print("--- Syncing Ivy League Seeds ---")
-    # Guaranteed high-quality content to build site authority
     seeds = [
-        {"title": "CS50's Intro to AI with Python", "url": "https://pll.harvard.edu/course/cs50s-introduction-artificial-intelligence-python", "provider": "Harvard University", "category": "Coding", "thumb": "https://learning.harvard.edu/sites/default/files/styles/course_listing/public/course-images/CS50%20AI.png"},
-        {"title": "MIT: Intro to Deep Learning", "url": "https://ocw.mit.edu/courses/6-s191-introduction-to-deep-learning-january-iap-2023/", "provider": "MIT", "category": "Coding", "thumb": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"}
+        {"title": "CS50's Intro to AI", "url": "https://pll.harvard.edu/course/cs50s-introduction-artificial-intelligence-python", "provider": "Harvard", "category": "Coding", "thumb": "https://learning.harvard.edu/sites/default/files/styles/course_listing/public/course-images/CS50%20AI.png"},
+        {"title": "MIT Deep Learning", "url": "https://ocw.mit.edu/courses/6-s191-introduction-to-deep-learning-january-iap-2023/", "provider": "MIT", "category": "Coding", "thumb": "https://ocw.mit.edu/static/images/ocw_logo_orange.png"}
     ]
     for course in seeds:
         data = {"title": course["title"], "url": course["url"], "provider": course["provider"], "category": course["category"], "thumbnail_url": course["thumb"]}
         supabase.table("courses").upsert(data, on_conflict="url").execute()
-        print(f"Synced Seed: {course['title']}")
 
 if __name__ == "__main__":
-    scrape_youtube()
-    scrape_udemy_api()
-    scrape_coursera_api()
+    scrape_youtube_multi_page(100) # Now targets 100 courses
     scrape_university_seeds()
