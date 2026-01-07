@@ -1,14 +1,3 @@
-import os
-import requests
-from supabase import create_client
-
-# 1. Configuration - Loads secrets from GitHub environment
-supabase_url = os.environ.get("SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
-youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
-
-supabase = create_client(supabase_url, supabase_key)
-
 def scrape_youtube_multi_page(max_total=100):
     print(f"--- Starting YouTube Scrape (Target: {max_total} courses) ---")
     search_query = "Free full courses"
@@ -28,60 +17,43 @@ def scrape_youtube_multi_page(max_total=100):
         }
         
         try:
-            response = requests.get(base_url, params=params)
-            # LOGGING: Print the status to see if GitHub is being blocked
-            print(f"DEBUG: YouTube API Response Status Code: {response.status_code}")
+            response = requests.get(base_url, params=params).json()
+            items = response.get("items", [])
             
-            if response.status_code != 200:
-                # This will show if you hit your 10,000 unit daily quota
-                print(f"ERROR DETAILS: {response.text}")
-                break
-                
-            data = response.json()
-            items = data.get("items", [])
-            
-            if not items:
-                print("DEBUG: No items found in the current page.")
-                break
-                
             for item in items:
-                title = item["snippet"]["title"]
-                category = "General Learning"
-                if any(word in title.lower() for word in ["code", "python", "javascript", "programming"]):
+                title = item["snippet"]["title"].lower()
+                
+                # Logic to map YouTube titles to your website headers
+                if any(word in title for word in ["code", "python", "javascript", "programming"]):
                     category = "Coding"
-                elif any(word in title.lower() for word in ["ai", "machine learning", "chatgpt"]):
+                elif any(word in title for word in ["ai", "machine learning", "chatgpt", "intelligence"]):
                     category = "AI Tools"
+                elif any(word in title for word in ["marketing", "seo", "ads", "social media"]):
+                    category = "Marketing"
+                elif any(word in title for word in ["design", "ui", "ux", "photoshop", "figma"]):
+                    category = "Design"
+                elif any(word in title for word in ["business", "finance", "startup", "management"]):
+                    category = "Business"
+                else:
+                    category = "General Learning" # Fallback category
 
                 course_data = {
-                    "title": title,
+                    "title": item["snippet"]["title"],
                     "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}",
                     "provider": "YouTube",
                     "category": category,
                     "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
                 }
                 
-                # Verify data is sending to Supabase
-                try:
-                    supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-                    total_added += 1
-                except Exception as db_err:
-                    print(f"DATABASE ERROR: Failed to add '{title}': {db_err}")
-
-                if total_added >= max_total:
-                    break
+                supabase.table("courses").upsert(course_data, on_conflict="url").execute()
+                total_added += 1
+                if total_added >= max_total: break
             
-            next_page_token = data.get("nextPageToken")
-            if not next_page_token:
-                print("DEBUG: No more pages available.")
-                break
+            next_page_token = response.get("nextPageToken")
+            if not next_page_token: break
                 
-            print(f"PROGRESS: Currently synced {total_added} courses...")
-            
         except Exception as e:
-            print(f"SYSTEM CRASH: {e}")
+            print(f"Scrape Error: {e}")
             break
             
-    print(f"--- Finished! Successfully synced {total_added} YouTube courses ---")
-
-if __name__ == "__main__":
-    scrape_youtube_multi_page(100)
+    print(f"Finished! Synced {total_added} courses across categories.")
