@@ -40,7 +40,7 @@ def scrape_youtube_multi_page(max_total=300):
                 title_full = item["snippet"]["title"]
                 title_lower = title_full.lower()
                 
-                # Logic to map specific categories
+                # Updated Keyword Mapping with 'Chef'
                 if any(word in title_lower for word in ["cyber", "security", "hacking", "pentest"]):
                     category = "Cybersecurity"
                 elif any(word in title_lower for word in ["cloud", "aws", "azure", "devops"]):
@@ -48,7 +48,7 @@ def scrape_youtube_multi_page(max_total=300):
                 elif any(word in title_lower for word in ["data science", "analysis", "sql", "tableau"]):
                     category = "Data"
                 elif any(word in title_lower for word in ["cook", "chef", "recipe", "baking", "culinary"]):
-                    category = "Cooking"
+                    category = "Chef"
                 elif any(word in title_lower for word in ["code", "python", "javascript", "react", "programming"]):
                     category = "Coding"
                 elif any(word in title_lower for word in ["ai", "machine learning", "chatgpt"]):
@@ -60,7 +60,6 @@ def scrape_youtube_multi_page(max_total=300):
                 elif any(word in title_lower for word in ["business", "finance", "management"]):
                     category = "Business"
                 else:
-                    # Catch-all for everything else
                     category = "General Learning"
 
                 course_data = {
