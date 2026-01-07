@@ -9,7 +9,7 @@ youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
 
 supabase = create_client(supabase_url, supabase_key)
 
-def scrape_youtube_multi_page(max_total=200): # Increased to 200 for more variety
+def scrape_youtube_multi_page(max_total=300):
     print(f"--- Starting YouTube Scrape (Target: {max_total}) ---")
     search_query = "Full free courses for beginners 2026"
     base_url = "https://www.googleapis.com/youtube/v3/search"
@@ -40,16 +40,16 @@ def scrape_youtube_multi_page(max_total=200): # Increased to 200 for more variet
                 title_full = item["snippet"]["title"]
                 title_lower = title_full.lower()
                 
-                # 2. Advanced Keyword Mapping
+                # Logic to map specific categories
                 if any(word in title_lower for word in ["cyber", "security", "hacking", "pentest"]):
                     category = "Cybersecurity"
                 elif any(word in title_lower for word in ["cloud", "aws", "azure", "devops"]):
                     category = "Cloud Computing"
                 elif any(word in title_lower for word in ["data science", "analysis", "sql", "tableau"]):
                     category = "Data"
-                elif any(word in title_lower for word in ["cook", "chef", "recipe", "baking"]):
+                elif any(word in title_lower for word in ["cook", "chef", "recipe", "baking", "culinary"]):
                     category = "Cooking"
-                elif any(word in title_lower for word in ["code", "python", "javascript", "react"]):
+                elif any(word in title_lower for word in ["code", "python", "javascript", "react", "programming"]):
                     category = "Coding"
                 elif any(word in title_lower for word in ["ai", "machine learning", "chatgpt"]):
                     category = "AI Tools"
@@ -57,9 +57,10 @@ def scrape_youtube_multi_page(max_total=200): # Increased to 200 for more variet
                     category = "Marketing"
                 elif any(word in title_lower for word in ["design", "ui", "ux", "figma"]):
                     category = "Design"
-                elif any(word in title_lower for word in ["business", "finance", "excel"]):
+                elif any(word in title_lower for word in ["business", "finance", "management"]):
                     category = "Business"
                 else:
+                    # Catch-all for everything else
                     category = "General Learning"
 
                 course_data = {
@@ -84,4 +85,4 @@ def scrape_youtube_multi_page(max_total=200): # Increased to 200 for more variet
     print(f"Done! Synced {total_added} courses.")
 
 if __name__ == "__main__":
-    scrape_youtube_multi_page(200)
+    scrape_youtube_multi_page(300)
