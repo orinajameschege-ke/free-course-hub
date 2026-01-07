@@ -1,87 +1,78 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import CourseCard from '@/components/CourseCard';
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-// 1. Fix the "never" error by defining the shape of your data
-interface Course {
-  id: string;
-  title: string;
-  provider: string;
-  category: string;
-  url: string;
-  thumbnail_url?: string;
-  description?: string;
-}
+// 1. Initialize Supabase Client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-const CATEGORIES = ["All", "AI Tools", "Coding", "Marketing", "Design", "Business"];
-
-export default function Home() {
-  // 2. Use Generics <Course[]> to tell TypeScript this is an array of Courses
-  const [courses, setCourses] = useState<Course[]>([]);
+export default function CourseHub() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 2. Fetch Data from Supabase
   useEffect(() => {
-    const fetchCourses = async () => {
-      setLoading(true);
-      
-      // Start the query
-      let query = supabase.from('courses').select('*');
+    async function getCourses() {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      // Filter by Category if not "All"
-      if (selectedCategory !== "All") {
-        query = query.eq('category', selectedCategory);
-      }
-
-      // Filter by Search Query if text exists
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (!error) setCourses(data || []);
+      if (data) setCourses(data);
       setLoading(false);
-    };
+    }
+    getCourses();
+  }, []);
 
-    // Debounce the search so we don't spam the database while typing
-    const timeoutId = setTimeout(fetchCourses, 300);
-    return () => clearTimeout(timeoutId);
+  // 3. Robust Search and Filter Logic
+  const filteredCourses = courses.filter((course) => {
+    const matchesSearch = 
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-  }, [selectedCategory, searchQuery]);
+    const matchesCategory = 
+      selectedCategory === "All" || 
+      course.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ["All", "AI Tools", "Coding", "Marketing", "Design", "Business"];
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-extrabold text-gray-900">Free Course Hub</h1>
-          <p className="text-gray-500">The best free AI and technical resources, updated daily.</p>
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto text-center">
+        <h1 className="text-5xl font-bold text-gray-900 mb-2">Free Course Hub</h1>
+        <p className="text-gray-600 mb-8">The best free technical resources, updated daily.</p>
+
+        {/* Search Bar - Fixed Visibility */}
+        <div className="relative max-w-2xl mx-auto mb-8">
+          <input
+            type="text"
+            placeholder="Search for free courses (e.g. Harvard, Python)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-4 pl-6 rounded-2xl border-2 border-blue-100 bg-white 
+                       text-gray-900 font-medium placeholder-gray-400 
+                       focus:border-blue-500 focus:ring-4 focus:ring-blue-100 
+                       outline-none transition-all shadow-sm"
+          />
         </div>
 
-        {/* Search Bar */}
-        // Find your search input and update the classes
-<input
-  type="text"
-  placeholder="Search for free courses..."
-  className="w-full p-4 rounded-xl border border-gray-200 
-             bg-white text-gray-900 placeholder-gray-500 
-             focus:outline-none focus:ring-2 focus:ring-blue-500"
-  // ... your existing onChange logic
-/>
-
-        {/* Category Bar */}
-        <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar justify-center">
-          {CATEGORIES.map((cat) => (
+        {/* Category Filters */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+              className={`px-6 py-2 rounded-full font-semibold transition-all ${
                 selectedCategory === cat
-                  ? "bg-indigo-600 text-white shadow-md"
+                  ? "bg-blue-600 text-white shadow-lg scale-105"
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
               }`}
             >
@@ -90,22 +81,39 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Course Display Grid */}
+        {/* Course Grid */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <p className="text-gray-500">Loading courses...</p>
+        ) : filteredCourses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+            {filteredCourses.map((course) => (
+              <div key={course.id} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow border border-gray-100">
+                <img 
+                  src={course.thumbnail_url || "/placeholder.png"} 
+                  alt={course.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                    {course.provider} • {course.category}
+                  </span>
+                  <h3 className="text-lg font-bold text-gray-900 mt-2 line-clamp-2 h-14">
+                    {course.title}
+                  </h3>
+                  <a
+                    href={course.url}
+                    target="_blank"
+                    className="inline-block mt-4 text-blue-600 font-bold hover:underline"
+                  >
+                    View Course →
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.length > 0 ? (
-              courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))
-            ) : (
-              <p className="col-span-full text-center py-20 text-gray-500">
-                No courses found matching your criteria.
-              </p>
-            )}
+          <div className="bg-white p-12 rounded-2xl shadow-sm border border-dashed border-gray-300">
+            <p className="text-gray-500 italic text-lg">No courses found matching "{searchTerm}" in {selectedCategory}.</p>
           </div>
         )}
       </div>
