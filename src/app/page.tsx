@@ -39,6 +39,7 @@ export default function CourseHub() {
       <Head>
         <title>Free Course Hub | 400+ Free YouTube Courses</title>
         <meta name="description" content="Access 400+ free courses in Coding, AI, Chef, and Cybersecurity. Updated daily." />
+        <meta name="google-site-verification" content="XOASp4U7VnpiQYbDj0QDqgzNTaR2gWmNX0Tv-E9sOeM" />
       </Head>
 
       <main className="min-h-screen bg-gray-50 p-6">
