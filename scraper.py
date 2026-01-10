@@ -65,7 +65,7 @@ def scrape_youtube(query, count=100):
 
 if __name__ == "__main__":
     # Multi-search strategy to ensure all categories fill up
-    scrape_youtube("Full free technical courses 2026", 150)
-    scrape_youtube("Professional Chef and Culinary courses full", 50)
-    scrape_youtube("Cybersecurity and Cloud Computing full courses", 125)
-    scrape_youtube("Marketing and Business Management courses", 75)
+    scrape_youtube("Full free technical courses 2026", 175)
+    scrape_youtube("Professional Chef and Culinary courses full", 75)
+    scrape_youtube("Cybersecurity and Cloud Computing full courses", 150)
+    scrape_youtube("Marketing and Business Management courses", 100)
