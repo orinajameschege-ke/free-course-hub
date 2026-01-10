@@ -1,0 +1,6 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Point Google specifically to your sitemap
+Sitemap: https://free-course-hub.vercel.app/sitemap.xml
