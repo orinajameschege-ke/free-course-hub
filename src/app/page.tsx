@@ -49,7 +49,10 @@ export default function CourseHub() {
         <meta name="description" content="Discover curated free courses in Coding, AI, Chef, and Cybersecurity. Updated daily." />
         <meta name="google-site-verification" content="google95bd5d85c658668" />
         
-        {/* Your Google AdSense Script */}
+        {/* AdSense Verification Meta Tag */}
+        <meta name="google-adsense-account" content="ca-pub-6287383384390386" />
+
+        {/* Google AdSense Script */}
         <script 
           async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6287383384390386"
@@ -73,17 +76,17 @@ export default function CourseHub() {
             </div>
           </header>
 
-          {/* Ad Placement: Display Banner */}
+          {/* Monetization: Top Ad Banner Slot */}
           <div className="max-w-4xl mx-auto mb-10 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
              <div className="p-2 text-center border-b border-gray-100 bg-gray-50">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sponsored Advertisement</p>
              </div>
              <div className="flex min-h-[100px] items-center justify-center p-4">
-                {/* Actual AdSense Unit Code */}
+                {/* Responsive Ad Unit */}
                 <ins className="adsbygoogle"
                      style={{ display: 'block' }}
                      data-ad-client="ca-pub-6287383384390386"
-                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-slot="AUTO" 
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
                 <script>
@@ -92,6 +95,7 @@ export default function CourseHub() {
              </div>
           </div>
 
+          {/* Categories */}
           <div className="flex flex-wrap justify-center gap-3 mb-12">
             {categories.map((cat) => (
               <button
@@ -108,8 +112,9 @@ export default function CourseHub() {
             ))}
           </div>
 
+          {/* Grid */}
           {loading ? (
-            <div className="text-center py-20 text-gray-400 font-bold">Loading 400+ Resources...</div>
+            <div className="text-center py-20 text-gray-400 font-bold">Loading Resources...</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredCourses.map((course) => (
