@@ -18,6 +18,7 @@ export default function CourseHub() {
 
   useEffect(() => {
     async function getCourses() {
+      // Fetching 400 courses for a well-populated site
       const { data } = await supabase
         .from("courses")
         .select("*")
@@ -30,11 +31,7 @@ export default function CourseHub() {
     getCourses();
   }, []);
 
-  const categories = [
-    "All", "AI Tools", "Coding", "Cybersecurity", 
-    "Cloud Computing", "Data", "Chef", 
-    "Marketing", "Design", "Business", "General Learning"
-  ];
+  const categories = ["All", "AI Tools", "Coding", "Cybersecurity", "Cloud Computing", "Data", "Chef", "Marketing", "Design", "Business", "General Learning"];
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -46,13 +43,12 @@ export default function CourseHub() {
     <>
       <Head>
         <title>Free Course Hub | 400+ Free YouTube Courses</title>
-        <meta name="description" content="Discover curated free courses in Coding, AI, Chef, and Cybersecurity. Updated daily." />
-        <meta name="google-site-verification" content="google95bd5d85c658668" />
+        <meta name="description" content="Discover curated free courses in Coding, AI, Chef, and Cybersecurity." />
         
-        {/* AdSense Verification Meta Tag */}
+        {/* Mandatory AdSense Verification Meta Tag */}
         <meta name="google-adsense-account" content="ca-pub-6287383384390386" />
 
-        {/* Google AdSense Script */}
+        {/* Mandatory AdSense Script Snippet */}
         <script 
           async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6287383384390386"
@@ -64,7 +60,6 @@ export default function CourseHub() {
         <div className="max-w-7xl mx-auto">
           <header className="text-center mb-10">
             <h1 className="text-5xl font-black text-gray-900 mb-4">Free Course Hub</h1>
-            
             <div className="max-w-2xl mx-auto">
               <input
                 type="text"
@@ -76,35 +71,25 @@ export default function CourseHub() {
             </div>
           </header>
 
-          {/* Monetization: Top Ad Banner Slot */}
-          <div className="max-w-4xl mx-auto mb-10 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-             <div className="p-2 text-center border-b border-gray-100 bg-gray-50">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sponsored Advertisement</p>
-             </div>
-             <div className="flex min-h-[100px] items-center justify-center p-4">
-                {/* Responsive Ad Unit */}
-                <ins className="adsbygoogle"
-                     style={{ display: 'block' }}
-                     data-ad-client="ca-pub-6287383384390386"
-                     data-ad-slot="AUTO" 
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-             </div>
+          {/* AdSense Display Slot */}
+          <div className="max-w-4xl mx-auto mb-10 p-4 bg-white rounded-xl border border-gray-200 shadow-sm text-center min-h-[100px] flex flex-col justify-center">
+             <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Advertisement</p>
+             <ins className="adsbygoogle"
+                  style={{ display: 'block' }}
+                  data-ad-client="ca-pub-6287383384390386"
+                  data-ad-slot="auto"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"></ins>
+             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
           </div>
 
-          {/* Categories */}
           <div className="flex flex-wrap justify-center gap-3 mb-12">
             {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2 rounded-xl text-sm font-bold transition-all border ${
-                  selectedCategory === cat 
-                    ? "bg-blue-600 text-white border-blue-600 shadow-lg" 
-                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+              <button 
+                key={cat} 
+                onClick={() => setSelectedCategory(cat)} 
+                className={`px-5 py-2 rounded-xl text-sm font-bold border transition-all ${
+                    selectedCategory === cat ? "bg-blue-600 text-white shadow-lg border-blue-600" : "bg-white text-gray-700 border-gray-200"
                 }`}
               >
                 {cat}
@@ -112,11 +97,10 @@ export default function CourseHub() {
             ))}
           </div>
 
-          {/* Grid */}
           {loading ? (
-            <div className="text-center py-20 text-gray-400 font-bold">Loading Resources...</div>
+            <div className="text-center py-20 font-bold text-gray-400">Loading 400+ Resources...</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredCourses.map((course) => (
                 <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all">
                   <img src={course.thumbnail_url} alt={course.title} className="w-full h-48 object-cover" />
@@ -130,7 +114,6 @@ export default function CourseHub() {
             </div>
           )}
         </div>
-        
         <Newsletter />
       </main>
     </>
