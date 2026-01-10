@@ -1,8 +1,9 @@
 import os
 import requests
+import re # Added for cleaning titles
 from supabase import create_client
 
-# 1. Configuration
+# Configuration
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
 youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
@@ -10,30 +11,27 @@ youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
 supabase = create_client(supabase_url, supabase_key)
 
 def get_category(title_lower):
-    """Categorization logic for all 11 categories"""
     if any(word in title_lower for word in ["cyber", "security", "hacking", "pentest"]):
         return "Cybersecurity"
     elif any(word in title_lower for word in ["cloud", "aws", "azure", "devops"]):
         return "Cloud Computing"
     elif any(word in title_lower for word in ["data science", "analysis", "sql", "tableau"]):
         return "Data"
-    elif any(word in title_lower for word in ["cook", "chef", "recipe", "baking", "culinary", "kitchen"]):
+    elif any(word in title_lower for word in ["cook", "chef", "recipe", "baking", "culinary"]):
         return "Chef"
     elif any(word in title_lower for word in ["code", "python", "javascript", "react", "programming"]):
         return "Coding"
     elif any(word in title_lower for word in ["ai", "machine learning", "chatgpt"]):
         return "AI Tools"
-    elif any(word in title_lower for word in ["marketing", "seo", "ads", "social media"]):
+    elif any(word in title_lower for word in ["marketing", "seo", "ads"]):
         return "Marketing"
-    elif any(word in title_lower for word in ["design", "ui", "ux", "figma", "graphic"]):
+    elif any(word in title_lower for word in ["design", "ui", "ux", "figma"]):
         return "Design"
-    elif any(word in title_lower for word in ["business", "finance", "management", "excel"]):
+    elif any(word in title_lower for word in ["business", "finance", "management"]):
         return "Business"
     return "General Learning"
 
 def scrape_youtube(query, count=100):
-    """Fetches specific batches of courses"""
-    print(f"Syncing {count} courses for query: {query}")
     base_url = "https://www.googleapis.com/youtube/v3/search"
     params = {
         "part": "snippet",
@@ -48,24 +46,26 @@ def scrape_youtube(query, count=100):
         if response.status_code == 200:
             items = response.json().get("items", [])
             for item in items:
-                title = item["snippet"]["title"]
+                raw_title = item["snippet"]["title"]
+                
+                # CLEANING STEP: Remove emojis/symbols for better SEO
+                clean_title = re.sub(r'[^\w\s-]', '', raw_title)
+                
                 course_data = {
-                    "title": title,
+                    "title": clean_title,
                     "url": f"https://www.youtube.com/watch?v={item['id']['videoId']}",
                     "provider": "YouTube",
-                    "category": get_category(title.lower()),
+                    "category": get_category(clean_title.lower()),
                     "thumbnail_url": item["snippet"]["thumbnails"]["high"]["url"]
                 }
-                # Prevents duplicates via URL unique constraint
+                # Upsert prevents duplicate links
                 supabase.table("courses").upsert(course_data, on_conflict="url").execute()
-            print(f"Successfully processed batch for {query}")
     except Exception as e:
-        print(f"Batch failed: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    # Split the 400 target into dedicated searches to ensure category depth
+    # Multi-search strategy to ensure all categories fill up
     scrape_youtube("Full free technical courses 2026", 150)
-    scrape_youtube("Professional Chef and Cooking courses full", 50)
+    scrape_youtube("Professional Chef and Culinary courses full", 50)
     scrape_youtube("Cybersecurity and Cloud Computing full courses", 125)
-    scrape_youtube("Business Marketing and Design full courses", 75)
-    print("--- 400 Course Sync Complete ---")
+    scrape_youtube("Marketing and Business Management courses", 75)
