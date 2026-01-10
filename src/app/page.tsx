@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Head from 'next/head';
-import Newsletter from '@/components/Newsletter'; // Import the new newsletter
+import Newsletter from '@/components/Newsletter';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +18,6 @@ export default function CourseHub() {
 
   useEffect(() => {
     async function getCourses() {
-      // Fetching up to 400 courses to match your new scraper limit
       const { data } = await supabase
         .from("courses")
         .select("*")
@@ -31,7 +30,6 @@ export default function CourseHub() {
     getCourses();
   }, []);
 
-  // Updated categories list including 'Chef' and 'General Learning'
   const categories = [
     "All", "AI Tools", "Coding", "Cybersecurity", 
     "Cloud Computing", "Data", "Chef", 
@@ -46,19 +44,24 @@ export default function CourseHub() {
 
   return (
     <>
-      {/* SEO Metadata for Google Search results */}
       <Head>
         <title>Free Course Hub | 400+ Free YouTube Courses</title>
         <meta name="description" content="Discover curated free courses in Coding, AI, Chef, and Cybersecurity. Updated daily." />
         <meta name="google-site-verification" content="google95bd5d85c658668" />
+        
+        {/* Your Google AdSense Script */}
+        <script 
+          async 
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6287383384390386"
+          crossOrigin="anonymous"
+        ></script>
       </Head>
 
       <main className="min-h-screen bg-gray-50 p-6 md:p-12">
         <div className="max-w-7xl mx-auto">
-          <header className="text-center mb-12">
+          <header className="text-center mb-10">
             <h1 className="text-5xl font-black text-gray-900 mb-4">Free Course Hub</h1>
             
-            {/* High Contrast Search Bar for better accessibility */}
             <div className="max-w-2xl mx-auto">
               <input
                 type="text"
@@ -70,7 +73,25 @@ export default function CourseHub() {
             </div>
           </header>
 
-          {/* Category Filter Section */}
+          {/* Ad Placement: Display Banner */}
+          <div className="max-w-4xl mx-auto mb-10 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+             <div className="p-2 text-center border-b border-gray-100 bg-gray-50">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sponsored Advertisement</p>
+             </div>
+             <div className="flex min-h-[100px] items-center justify-center p-4">
+                {/* Actual AdSense Unit Code */}
+                <ins className="adsbygoogle"
+                     style={{ display: 'block' }}
+                     data-ad-client="ca-pub-6287383384390386"
+                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+             </div>
+          </div>
+
           <div className="flex flex-wrap justify-center gap-3 mb-12">
             {categories.map((cat) => (
               <button
@@ -87,32 +108,17 @@ export default function CourseHub() {
             ))}
           </div>
 
-          {/* Course Grid Display */}
           {loading ? (
             <div className="text-center py-20 text-gray-400 font-bold">Loading 400+ Resources...</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredCourses.map((course) => (
                 <div key={course.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all">
-                  <img 
-                    src={course.thumbnail_url} 
-                    alt={course.title} 
-                    className="w-full h-48 object-cover" 
-                  />
+                  <img src={course.thumbnail_url} alt={course.title} className="w-full h-48 object-cover" />
                   <div className="p-6">
-                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest">
-                      {course.category}
-                    </span>
-                    <h3 className="text-lg font-bold text-gray-900 mt-2 line-clamp-2 h-14">
-                      {course.title}
-                    </h3>
-                    <a 
-                      href={course.url} 
-                      target="_blank" 
-                      className="mt-4 block text-center py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors"
-                    >
-                      Start Learning →
-                    </a>
+                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest">{course.category}</span>
+                    <h3 className="text-lg font-bold text-gray-900 mt-2 line-clamp-2 h-14">{course.title}</h3>
+                    <a href={course.url} target="_blank" className="mt-4 block text-center py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors">Start Learning →</a>
                   </div>
                 </div>
               ))}
@@ -120,7 +126,6 @@ export default function CourseHub() {
           )}
         </div>
         
-        {/* Newsletter Popup */}
         <Newsletter />
       </main>
     </>
