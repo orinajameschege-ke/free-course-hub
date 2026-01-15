@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -58,14 +57,14 @@ export default async function CategoryPage({
                   </p>
                 </div>
                 
-                {/* FIXED: href={course.link} pulls the YouTube URL directly
-                   target="_blank" opens in a new tab
+                {/* FIXED: href={course.link} pulls the YouTube URL from your 'link' column
+                   Using <a> instead of <Link> for external YouTube links
                 */}
                 <a 
                   href={course.link} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all text-center flex items-center justify-center shadow-lg shadow-blue-900/20"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all text-center flex items-center justify-center shadow-lg shadow-blue-900/20 block"
                 >
                   Start Learning Now
                   <span className="ml-2">→</span>
