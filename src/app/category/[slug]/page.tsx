@@ -13,7 +13,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
   if (!slug) return notFound();
 
-  // Fetching specifically from the 'link' column seen in your screenshots
+  // Fetching data from Supabase
   const { data: courses, error } = await supabase
     .from('courses')
     .select('*')
@@ -27,22 +27,22 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses?.map((course) => (
-            <div key={course.id} className="relative bg-slate-800/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-md flex flex-col">
+            <div key={course.id} className="relative bg-slate-800/40 border border-white/5 p-8 rounded-[2rem] flex flex-col h-full">
               <h2 className="text-xl font-bold mb-3">{course.title}</h2>
-              <p className="text-slate-400 text-sm mb-10 flex-grow">{course.description}</p>
+              <p className="text-slate-400 text-sm mb-12 flex-grow">{course.description}</p>
               
-              {/* THE ULTIMATE FIX:
-                 1. We use an 'a' tag (standard for external links)
-                 2. 'relative z-50' forces it to stay on top of the blur effect
-                 3. 'pointer-events-auto' tells the browser it is clickable
+              {/* CRITICAL FIXES:
+                1. z-[99] - Forces the link to the very top layer.
+                2. pointer-events-auto - Ensures it accepts clicks.
+                3. href={course.link} - Uses the exact column from your screenshot.
               */}
               <a 
                 href={course.link} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="relative z-50 pointer-events-auto w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl text-center transition-all shadow-xl block"
+                className="relative z-[99] pointer-events-auto block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-center transition-all cursor-pointer shadow-lg"
               >
-                Watch on YouTube →
+                Watch Now →
               </a>
             </div>
           ))}
