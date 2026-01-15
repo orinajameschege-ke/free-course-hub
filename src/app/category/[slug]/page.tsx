@@ -17,6 +17,7 @@ export default async function CategoryPage({
 
   if (!slug) return notFound();
 
+  // Fetching from your 'courses' table
   const { data: courses, error } = await supabase
     .from('courses')
     .select('*')
@@ -47,16 +48,16 @@ export default async function CategoryPage({
                   </p>
                 </div>
                 
-                {/* CRITICAL FIX: 
-                   1. 'href' uses 'course.link' from your Supabase screenshot
-                   2. 'relative z-10' ensures the link is on top of any card overlays
-                   3. 'inline-block' makes the whole button a hit area
+                {/* THE ULTIMATE FIX:
+                   1. href={course.link} matches your Supabase column exactly
+                   2. 'pointer-events-auto' ensures the button is interactive
+                   3. 'z-50' puts the button on top of all transparent card layers
                 */}
                 <a 
                   href={course.link} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="relative z-10 inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-center transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+                  className="relative z-50 pointer-events-auto inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-center transition-all shadow-lg active:scale-95"
                 >
                   Start Learning Now →
                 </a>
