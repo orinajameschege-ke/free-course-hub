@@ -2,67 +2,77 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+// Initialize Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CategoryPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}) {
   const resolvedParams = await params;
   
-  // Decodes category names with spaces (e.g., "AI tools")
+  // Decode URL (e.g., "AI%20tools" -> "AI tools")
   const slug = decodeURIComponent(resolvedParams?.slug || "");
 
   if (!slug) return notFound();
 
-  // Fetches courses matching the exact category string in Supabase
+  // Fetch courses matching the category exactly as written in Supabase
   const { data: courses, error } = await supabase
     .from('courses')
     .select('*')
     .eq('category', slug); 
 
   return (
-    <main className="min-h-screen bg-[#0f1115] text-white p-8 pt-32">
+    <main className="min-h-screen bg-[#0f1115] text-white p-8 pt-32 font-sans">
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="text-blue-500 mb-8 inline-block hover:text-blue-400 transition-colors">
-          ← Back to Hub
+        <Link 
+          href="/" 
+          className="text-blue-500 hover:text-blue-400 mb-8 inline-flex items-center transition-colors font-medium"
+        >
+          <span className="mr-2">←</span> Back to Hub
         </Link>
         
-        <h1 className="text-5xl font-black mb-12 capitalize tracking-tighter text-white">
+        <h1 className="text-5xl font-bold mb-12 tracking-tight text-white">
           {slug} Courses
         </h1>
 
-        {error && <p className="text-red-500">Error loading resources.</p>}
+        {error && <p className="text-red-500">Error loading courses.</p>}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses && courses.length > 0 ? (
             courses.map((course) => (
-              <div key={course.id} className="bg-slate-800/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-md flex flex-col justify-between hover:border-blue-500/30 transition-all group">
+              <div 
+                key={course.id} 
+                className="bg-slate-800/40 border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-md flex flex-col justify-between hover:border-blue-500/30 transition-all duration-300"
+              >
                 <div>
-                  <h2 className="text-xl font-bold mb-3 text-white group-hover:text-blue-400 transition-colors">
+                  <h2 className="text-xl font-bold mb-3 text-white leading-tight">
                     {course.title}
                   </h2>
-                  <p className="text-slate-400 text-sm mb-8 leading-relaxed font-light">
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">
                     {course.description}
                   </p>
                 </div>
                 
-                {/* Clickable link to YouTube */}
+                {/* Fixed: href={course.link} matches your Supabase column name */}
                 <a 
-                  href={course.link} 
+                  href={course.link || "#"} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="bg-blue-600/10 text-blue-400 text-center py-3 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all border border-blue-500/20"
+                  className="w-full bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white font-bold py-3 px-6 rounded-2xl transition-all text-center flex items-center justify-center group"
                 >
-                  Start Learning →
+                  Start Learning 
+                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </a>
               </div>
             ))
           ) : (
-            <div className="col-span-full py-20 text-center bg-slate-800/20 rounded-[2.5rem] border border-dashed border-white/10">
-              <p className="text-slate-500 uppercase tracking-widest text-sm font-bold">
-                No courses available in this category yet.
-              </p>
+            <div className="col-span-full py-20 text-center">
+              <p className="text-slate-500 text-lg">No courses found in this category.</p>
             </div>
           )}
         </div>
