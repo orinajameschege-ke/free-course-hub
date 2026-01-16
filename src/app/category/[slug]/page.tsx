@@ -6,10 +6,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Helper function to extract YouTube ID for thumbnails
+// Improved helper to extract YouTube ID from different URL formats
 function getYouTubeID(url: string) {
+  if (!url) return null;
   const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url?.match(regExp);
+  const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
@@ -17,12 +18,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const resolvedParams = await params;
   const slug = decodeURIComponent(resolvedParams?.slug || "");
 
+  // Fetching '*' to ensure all columns (like 'link') are included
   const { data: courses, error } = await supabase
     .from('courses')
     .select('*') 
     .eq('category', slug);
 
-  if (error) return <div className="p-10 text-red-500 font-mono">Error: {error.message}</div>;
+  if (error) return <div className="p-10 text-red-500">Error: {error.message}</div>;
 
   return (
     <div className="min-h-screen bg-white text-black p-6 md:p-12 font-sans">
@@ -37,23 +39,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {courses && courses.length > 0 ? (
           courses.map((course) => {
-            const videoId = getYouTubeID(course.link || "");
+            const videoId = getYouTubeID(course.link);
+            // Using hqdefault as it is more reliable for all videos
             const thumbnailUrl = videoId 
-              ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` 
+              ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` 
               : null;
 
             return (
-              <div key={course.id} className="border-4 border-black bg-gray-50 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex flex-col h-full">
-                {/* 1. YouTube Thumbnail Display */}
-                <div className="w-full aspect-video bg-gray-200 border-b-4 border-black overflow-hidden">
+              <div key={course.id} className="border-4 border-black bg-gray-50 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex flex-col h-full overflow-hidden">
+                {/* Visual Thumbnail Section */}
+                <div className="w-full aspect-video bg-gray-200 border-b-4 border-black relative">
                   {thumbnailUrl ? (
                     <img 
                       src={thumbnailUrl} 
-                      alt={course.title} 
+                      alt="" 
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400 font-bold uppercase">No Thumbnail</div>
+                    <div className="flex items-center justify-center h-full text-gray-400 font-bold">NO THUMBNAIL</div>
                   )}
                 </div>
 
@@ -63,11 +67,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                     {course.description}
                   </p>
                   
-                  {/* 2. Updated Button Text: "Start Learning" */}
+                  {/* The Functional Link */}
                   <a 
                     href={course.link} 
                     target="_blank" 
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="inline-block w-full bg-black text-white px-6 py-4 font-black uppercase tracking-tighter transition-all duration-200 text-lg text-center border-4 border-black shadow-[4px_4px_0px_0px_rgba(37,99,235,1)] hover:bg-blue-600 hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:scale-95"
                   >
                     Start Learning →
@@ -77,7 +81,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             );
           })
         ) : (
-          <p className="text-xl italic text-gray-500">No courses available in "{slug}" yet.</p>
+          <p className="text-xl italic text-gray-500">No courses available in this category.</p>
         )}
       </div>
     </div>
