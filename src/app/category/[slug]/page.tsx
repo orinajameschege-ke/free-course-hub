@@ -8,13 +8,13 @@ const supabase = createClient(
 );
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
-  // 1. Resolve params for Next.js 15
+  // 1. Next.js 15: Await params to prevent pre-render errors
   const resolvedParams = await params;
   const slug = decodeURIComponent(resolvedParams?.slug || "");
 
   if (!slug) return notFound();
 
-  // 2. Fetch data using the 'link' column from your Supabase screenshot
+  // 2. Fetch data from your 'courses' table
   const { data: courses, error } = await supabase
     .from('courses')
     .select('*')
@@ -30,23 +30,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           {courses?.map((course) => (
             <div 
               key={course.id} 
-              className="relative bg-slate-900/40 border border-white/10 p-8 rounded-[2.5rem] backdrop-blur-md flex flex-col h-full overflow-visible"
+              className="relative bg-slate-900/60 border border-white/10 p-8 rounded-[2rem] backdrop-blur-md flex flex-col h-full overflow-hidden"
             >
-              <h2 className="text-xl font-bold mb-3">{course.title}</h2>
-              <p className="text-slate-400 text-sm mb-12 flex-grow leading-relaxed">
-                {course.description}
-              </p>
+              <div className="flex-grow">
+                <h2 className="text-xl font-bold mb-3">{course.title}</h2>
+                <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                  {course.description}
+                </p>
+              </div>
               
-              {/* THE CRITICAL FIX:
-                  1. href={course.link} - Points to your YouTube URL
-                  2. relative z-[100] - Puts the button physically above all blurs/layers
-                  3. pointer-events-auto - Forces the browser to recognize the click
+              {/* THE DEFINITIVE FIX:
+                  1. href={course.link} - Points to the YouTube URL column
+                  2. relative z-50 - Forces the button to stay on top of all blur layers
+                  3. pointer-events-auto - Explicitly tells the browser to accept clicks here
               */}
               <a 
                 href={course.link} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="relative z-[100] pointer-events-auto block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl text-center transition-all shadow-2xl active:scale-95 cursor-pointer"
+                className="relative z-50 pointer-events-auto block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-center transition-all shadow-xl cursor-pointer active:scale-95"
               >
                 Watch on YouTube →
               </a>
