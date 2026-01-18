@@ -18,14 +18,25 @@ export default function ContactPage() {
           </p>
           
           <div className="space-y-6">
+            {/* Updated Email Section */}
             <div className="border-4 border-black p-6 bg-white hover:bg-yellow-50 transition-colors">
               <span className="block text-xs uppercase tracking-widest font-black text-gray-400 mb-1">Email</span>
-              <span className="text-xl font-bold">hello@freecoursehub.com</span>
+              <a href="mailto:orinajameschege@gmail.com" className="text-xl font-bold hover:text-blue-600 transition-colors">
+                orinajameschege@gmail.com
+              </a>
             </div>
             
+            {/* Updated WhatsApp Section */}
             <div className="border-4 border-black p-6 bg-white hover:bg-yellow-50 transition-colors">
-              <span className="block text-xs uppercase tracking-widest font-black text-gray-400 mb-1">Twitter / X</span>
-              <span className="text-xl font-bold text-blue-600">@FreeCourseHub</span>
+              <span className="block text-xs uppercase tracking-widest font-black text-gray-400 mb-1">WhatsApp</span>
+              <a 
+                href="https://wa.me/254705191437" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xl font-bold text-green-600 hover:text-green-700 transition-colors"
+              >
+                0705191437
+              </a>
             </div>
           </div>
 
