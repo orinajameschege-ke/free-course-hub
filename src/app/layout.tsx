@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-// 1. Import the Analytics component
 import { Analytics } from "@vercel/analytics/react";
+// 1. Import your Navbar component
+import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,10 +19,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      {/* 2. Added pt-20 to ensure content starts below the fixed navbar */}
+      <body className={`${inter.className} pt-20`}>
+        {/* 3. Add the Navbar here so it shows on every page */}
+        <Navbar />
+        
         {children}
-        {/* 2. Add the Analytics component here */}
+        
         <Analytics />
       </body>
     </html>
-  );}
+  );
+}
