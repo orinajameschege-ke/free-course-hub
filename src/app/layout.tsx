@@ -25,4 +25,16 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+import Navbar from '@/components/Navbar'; // Import the Navbar
+import './globals.css';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="font-sans pt-20"> {/* pt-20 adds space so content isn't hidden under the Navbar */}
+        <Navbar /> {/* Place it here */}
+        {children}
+      </body>
+    </html>
+  );
+}}
